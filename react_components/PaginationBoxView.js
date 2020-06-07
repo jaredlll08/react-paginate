@@ -308,14 +308,17 @@ export default class PaginationBoxView extends Component {
 
     const { selected } = this.state;
 
+    const isPreviousDisabled = selected === 0;
+    const isNextDisabled = selected === pageCount - 1 || pageCount <= 0;
+
     const previousClasses =
-      previousClassName + (selected === 0 ? ` ${disabledClassName}` : '');
+      previousClassName + (isPreviousDisabled ? ` ${disabledClassName}` : '');
     const nextClasses =
       nextClassName +
-      (selected === pageCount - 1 ? ` ${disabledClassName}` : '');
+      (selected === isNextDisabled ? ` ${disabledClassName}` : '');
 
-    const previousAriaDisabled = selected === 0 ? 'true' : 'false';
-    const nextAriaDisabled = selected === pageCount - 1 ? 'true' : 'false';
+    const previousAriaDisabled = isPreviousDisabled ? 'true' : 'false';
+    const nextAriaDisabled = isNextDisabled ? 'true' : 'false';
 
     let prevHref = this.hrefBuilder(selected > 0 ? selected - 1 : selected);
     let prevAs = this.asBuilder(selected > 0 ? selected - 1 : selected);
