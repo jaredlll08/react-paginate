@@ -1,5 +1,6 @@
 'use strict';
 
+import Link from 'next/link';
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -7,8 +8,8 @@ const PageView = props => {
   let pageClassName = props.pageClassName;
   let pageLinkClassName = props.pageLinkClassName;
 
-  const onClick = props.onClick;
   const href = props.href;
+  const as = props.as;
   let ariaLabel =
     props.ariaLabel ||
     'Page ' +
@@ -39,24 +40,34 @@ const PageView = props => {
 
   return (
     <li className={pageClassName}>
-      <a
-        onClick={onClick}
-        role="button"
-        className={pageLinkClassName}
-        href={href}
-        tabIndex="0"
-        aria-label={ariaLabel}
-        aria-current={ariaCurrent}
-        onKeyPress={onClick}
-      >
-        {props.page}
-      </a>
+      {href.length ? (
+        <Link href={href} as={as}>
+          <a
+            role="button"
+            className={pageLinkClassName}
+            tabIndex="0"
+            aria-label={ariaLabel}
+            aria-current={ariaCurrent}
+          >
+            {props.page}
+          </a>
+        </Link>
+      ) : (
+        <span
+          role="button"
+          className={pageLinkClassName}
+          tabIndex="0"
+          aria-label={ariaLabel}
+          aria-current={ariaCurrent}
+        >
+          {props.page}
+        </span>
+      )}
     </li>
   );
 };
 
 PageView.propTypes = {
-  onClick: PropTypes.func.isRequired,
   selected: PropTypes.bool.isRequired,
   pageClassName: PropTypes.string,
   pageLinkClassName: PropTypes.string,
@@ -64,6 +75,7 @@ PageView.propTypes = {
   activeLinkClassName: PropTypes.string,
   extraAriaContext: PropTypes.string,
   href: PropTypes.string,
+  as: PropTypes.string,
   ariaLabel: PropTypes.string,
   page: PropTypes.number.isRequired,
 };

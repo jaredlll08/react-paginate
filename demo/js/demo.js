@@ -89,6 +89,12 @@ export class App extends Component {
           containerClassName={'pagination'}
           subContainerClassName={'pages pagination'}
           activeClassName={'active'}
+          hrefBuilder={() => {
+            return '';
+          }}
+          asBuilder={() => {
+            return '';
+          }}
         />
       </div>
     );

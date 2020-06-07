@@ -4,6 +4,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import PageView from './PageView';
 import BreakView from './BreakView';
+import Link from 'next/link';
 
 export default class PaginationBoxView extends Component {
   static propTypes = {
@@ -13,6 +14,7 @@ export default class PaginationBoxView extends Component {
     previousLabel: PropTypes.node,
     nextLabel: PropTypes.node,
     breakLabel: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
+    asBuilder: PropTypes.func,
     hrefBuilder: PropTypes.func,
     onPageChange: PropTypes.func,
     initialPage: PropTypes.number,
@@ -100,27 +102,6 @@ export default class PaginationBoxView extends Component {
     }
   };
 
-  handleNextPage = evt => {
-    const { selected } = this.state;
-    const { pageCount } = this.props;
-
-    evt.preventDefault ? evt.preventDefault() : (evt.returnValue = false);
-    if (selected < pageCount - 1) {
-      this.handlePageSelected(selected + 1, evt);
-    }
-  };
-
-  handlePageSelected = (selected, evt) => {
-    evt.preventDefault ? evt.preventDefault() : (evt.returnValue = false);
-
-    if (this.state.selected === selected) return;
-
-    this.setState({ selected: selected });
-
-    // Call the callback with the new selected item:
-    this.callCallback(selected);
-  };
-
   getForwardJump() {
     const { selected } = this.state;
     const { pageCount, pageRangeDisplayed } = this.props;
@@ -137,17 +118,18 @@ export default class PaginationBoxView extends Component {
     return backwardJump < 0 ? 0 : backwardJump;
   }
 
-  handleBreakClick = (index, evt) => {
-    evt.preventDefault ? evt.preventDefault() : (evt.returnValue = false);
-
-    const { selected } = this.state;
-
-    this.handlePageSelected(
-      selected < index ? this.getForwardJump() : this.getBackwardJump(),
-      evt
-    );
-  };
-
+  asBuilder(pageIndex) {
+    const { asBuilder, pageCount } = this.props;
+    if (
+      asBuilder &&
+      pageIndex !== this.state.selected &&
+      pageIndex >= 0 &&
+      pageIndex < pageCount
+    ) {
+      return asBuilder(pageIndex + 1);
+    }
+    return '';
+  }
   hrefBuilder(pageIndex) {
     const { hrefBuilder, pageCount } = this.props;
     if (
@@ -158,6 +140,7 @@ export default class PaginationBoxView extends Component {
     ) {
       return hrefBuilder(pageIndex + 1);
     }
+    return '';
   }
 
   ariaLabelBuilder(pageIndex) {
@@ -199,7 +182,6 @@ export default class PaginationBoxView extends Component {
     return (
       <PageView
         key={index}
-        onClick={this.handlePageSelected.bind(null, index)}
         selected={selected === index}
         pageClassName={pageClassName}
         pageLinkClassName={pageLinkClassName}
@@ -207,6 +189,7 @@ export default class PaginationBoxView extends Component {
         activeLinkClassName={activeLinkClassName}
         extraAriaContext={extraAriaContext}
         href={this.hrefBuilder(index)}
+        as={this.asBuilder(index)}
         ariaLabel={this.ariaLabelBuilder(index)}
         page={index + 1}
       />
@@ -290,7 +273,16 @@ export default class PaginationBoxView extends Component {
               breakLabel={breakLabel}
               breakClassName={breakClassName}
               breakLinkClassName={breakLinkClassName}
-              onClick={this.handleBreakClick.bind(null, index)}
+              href={this.hrefBuilder(
+                selected < index
+                  ? this.getForwardJump()
+                  : this.getBackwardJump()
+              )}
+              as={this.asBuilder(
+                selected < index
+                  ? this.getForwardJump()
+                  : this.getBackwardJump()
+              )}
             />
           );
           items.push(breakView);
@@ -325,36 +317,64 @@ export default class PaginationBoxView extends Component {
     const previousAriaDisabled = selected === 0 ? 'true' : 'false';
     const nextAriaDisabled = selected === pageCount - 1 ? 'true' : 'false';
 
+    let prevHref = this.hrefBuilder(selected > 0 ? selected - 1 : selected);
+    let prevAs = this.asBuilder(selected > 0 ? selected - 1 : selected);
+    let nextHref = this.hrefBuilder(
+      selected < pageCount - 1 ? selected + 1 : selected
+    );
+    let nextAs = this.asBuilder(
+      selected < pageCount - 1 ? selected + 1 : selected
+    );
     return (
       <ul className={containerClassName}>
         <li className={previousClasses}>
-          <a
-            onClick={this.handlePreviousPage}
-            className={previousLinkClassName}
-            href={this.hrefBuilder(selected - 1)}
-            tabIndex="0"
-            role="button"
-            onKeyPress={this.handlePreviousPage}
-            aria-disabled={previousAriaDisabled}
-          >
-            {previousLabel}
-          </a>
+          {prevHref.length ? (
+            <Link href={prevHref} as={prevAs}>
+              <a
+                className={previousLinkClassName}
+                tabIndex="0"
+                role="button"
+                aria-disabled={previousAriaDisabled}
+              >
+                {previousLabel}
+              </a>
+            </Link>
+          ) : (
+            <span
+              className={previousLinkClassName}
+              tabIndex="0"
+              role="button"
+              aria-disabled={previousAriaDisabled}
+            >
+              {previousLabel}
+            </span>
+          )}
         </li>
 
         {this.pagination()}
 
         <li className={nextClasses}>
-          <a
-            onClick={this.handleNextPage}
-            className={nextLinkClassName}
-            href={this.hrefBuilder(selected + 1)}
-            tabIndex="0"
-            role="button"
-            onKeyPress={this.handleNextPage}
-            aria-disabled={nextAriaDisabled}
-          >
-            {nextLabel}
-          </a>
+          {nextHref.length ? (
+            <Link href={nextHref} as={nextAs}>
+              <a
+                className={nextLinkClassName}
+                tabIndex="0"
+                role="button"
+                aria-disabled={nextAriaDisabled}
+              >
+                {nextLabel}
+              </a>
+            </Link>
+          ) : (
+            <span
+              className={nextLinkClassName}
+              tabIndex="0"
+              role="button"
+              aria-disabled={nextAriaDisabled}
+            >
+              {nextLabel}
+            </span>
+          )}
         </li>
       </ul>
     );
